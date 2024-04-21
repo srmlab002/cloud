@@ -54,7 +54,41 @@ const VideoPlayer: FC<{
       loadFlv()
     }
   }, [videoUrl, isFlv, mpegts, subtitle])
+// Inside your VideoPlayer component
 
+// Add a state to track the last tap time and position
+const [lastTap, setLastTap] = useState({ time: 0, position: null });
+
+useEffect(() => {
+  const videoContainer = document.getElementById('plyr'); // Assuming 'plyr' is the ID of your video container
+
+  const handleDoubleTap = (event) => {
+    const currentTime = new Date().getTime();
+    const tapPosition = event.clientX < window.innerWidth / 2 ? 'left' : 'right';
+
+    if (currentTime - lastTap.time < 300 && tapPosition === lastTap.position) {
+      // Detected a double tap
+      const plyrPlayer = document.querySelector('.plyr').plyr; // Access the Plyr instance
+      if (tapPosition === 'left') {
+        plyrPlayer.currentTime = Math.max(plyrPlayer.currentTime - 10, 0); // Backward 10 seconds
+      } else {
+        plyrPlayer.currentTime = Math.min(plyrPlayer.currentTime + 10, plyrPlayer.duration); // Forward 10 seconds
+      }
+    }
+
+    setLastTap({ time: currentTime, position: tapPosition });
+  };
+
+  videoContainer.addEventListener('touchend', handleDoubleTap);
+
+  return () => {
+    // Clean up the event listener
+    videoContainer.removeEventListener('touchend', handleDoubleTap);
+  };
+}, [lastTap]);
+
+// ... rest of your component code
+          
   // Common plyr configs, including the video source and plyr options
   const plyrSource = {
     type: 'video',
